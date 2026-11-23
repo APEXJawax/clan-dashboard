@@ -3,18 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#333333">
 <title>Tableau de bord du clan</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --nuit: #1f2d47;
-  --pierre: #2c3f63;
-  --pierre-haut: #37507c;
-  --ligne: #4a6391;
-  --texte: #f3f6fc;
-  --doux: #a9b8d4;
+  --nuit: #333333;
+  --creux: #2a2a2a;
+  --pierre: #404040;
+  --pierre-haut: #4b4b4b;
+  --ligne: #5c5c5c;
+  --texte: #f4f4f4;
+  --doux: #bdbdbd;
   --or: #ffcf3f;
   --or-fonce: #b8901a;
   --vert: #62d26f;
@@ -60,7 +62,7 @@ h1 {
   line-height: 1.05;
   margin: 0;
   color: var(--or);
-  text-shadow: 0 3px 0 #0f1a2e;
+  text-shadow: 0 3px 0 #1a1a1a;
   letter-spacing: 0.01em;
 }
 .maj { margin: 6px 0 0; color: var(--doux); font-size: 0.9rem; }
@@ -70,7 +72,7 @@ h2 {
   font-weight: 400;
   font-size: 1.6rem;
   margin: 40px 0 14px;
-  text-shadow: 0 2px 0 #0f1a2e;
+  text-shadow: 0 2px 0 #1a1a1a;
 }
 
 /* Bilan : une seule plaque, séparée par des filets */
@@ -149,6 +151,9 @@ th.col-nom { background: var(--pierre-haut); }
 .tag { color: var(--doux); font-size: 0.78rem; display: block; }
 .grade { color: var(--doux); }
 .grade.chef { color: var(--or); font-weight: 800; }
+
+.hdv-cell { display: inline-flex; align-items: center; gap: 8px; }
+.hdv-img { height: 38px; width: auto; max-width: 52px; object-fit: contain; }
 
 .hdv {
   display: inline-block;
@@ -317,7 +322,7 @@ input.cmp { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(
   margin: 6px 0;
 }
 .m-nom { font-weight: 800; color: var(--c); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.m-piste { height: 14px; background: var(--nuit); border-radius: 999px; overflow: hidden; }
+.m-piste { height: 14px; background: var(--creux); border-radius: 999px; overflow: hidden; }
 .m-rempli { height: 100%; background: var(--c); border-radius: 999px; }
 .m-val { text-align: right; }
 .m-val strong { font-family: var(--titre); font-weight: 400; font-size: 1.15rem; display: block; line-height: 1.2; }
@@ -345,6 +350,9 @@ input.cmp { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(
   .m-ligne { grid-template-columns: 1fr auto; }
   .m-piste { order: 1; grid-column: 1 / -1; }
 }
+
+.mentions { margin-top: 48px; max-width: 62ch; color: var(--doux); font-size: 0.8rem; }
+.mentions a { color: var(--doux); }
 
 .erreur {
   background: #5a2a2a;
@@ -402,6 +410,10 @@ input.cmp { width: 20px; height: 20px; flex: none; margin: 0; accent-color: var(
   </section>
 
   <p id="erreur" class="erreur" role="alert" hidden></p>
+
+  <footer class="mentions">
+    Site de fans, gratuit et non commercial. Ce contenu n’est ni affilié à Supercell, ni approuvé, parrainé ou validé par Supercell, qui n’en est pas responsable. Voir la <a href="https://supercell.com/en/fan-content-policy/">politique de Supercell sur les contenus de fans</a>.
+  </footer>
 </div>
 
 <button id="btn-cmp" class="flottant" type="button" hidden>Voir la comparaison</button>
@@ -413,6 +425,7 @@ const CONFIG = {
   // Liens de publication CSV de Google Sheets (voir les instructions)
   CSV_MEMBRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=2139490637&single=true&output=csv",   // feuille « Membres_Public » (surtout pas « Membres »)
   CSV_GUERRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=675091606&single=true&output=csv",   // feuille « Archives_Guerres »
+  IMAGES_HDV: "hdv/{n}.png",  // images des hôtels de ville ; "" pour désactiver
   AFFICHER_TENDANCE: false,  // laisser false : la feuille publique ne contient pas la tendance
   NB_GUERRES_AFFICHEES: 10,
   RAFRAICHIR_MINUTES: 5
@@ -488,8 +501,10 @@ function parseCSV(texte) {
 async function chargerCSV(url, nom) {
   let reponse;
   try {
-    reponse = await fetch(url, { cache: "no-store" });
+    // Requête GET simple, sans option ni en-tête personnalisé (évite toute vérification préalable du navigateur)
+    reponse = await fetch(url);
   } catch (e) {
+    console.error("Échec de la lecture de la feuille " + nom, e);
     throw new Error("lecture impossible de la feuille " + nom);
   }
   if (!reponse.ok) throw new Error("feuille " + nom + " : erreur " + reponse.status);
@@ -543,6 +558,21 @@ function grouperGuerres(lignes) {
 }
 
 /* ------------------------------- Colonnes ------------------------------- */
+function celluleHdv(m) {
+  const boite = el("span", "hdv-cell");
+  if (CONFIG.IMAGES_HDV && m.hdv > 0) {
+    const img = document.createElement("img");
+    img.className = "hdv-img";
+    img.src = CONFIG.IMAGES_HDV.replace("{n}", m.hdv);
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener("error", () => img.remove()); // image absente : on garde seulement le numéro
+    boite.append(img);
+  }
+  boite.append(el("span", "hdv", m.hdv || "—"));
+  return boite;
+}
+
 const COLONNES = [
   { cle: "grade", label: "Grade", val: m => ORDRE_GRADES[m.grade] ?? 9,
     rendre: m => el("span", m.grade === "Chef" ? "grade chef" : "grade", m.grade) },
@@ -561,10 +591,10 @@ const COLONNES = [
       return boite;
     } },
   { cle: "hdv", label: "HDV", num: true, val: m => m.hdv,
-    rendre: m => el("span", "hdv", m.hdv || "—") },
+    rendre: m => celluleHdv(m) },
   { cle: "jours", label: "Jours au clan", num: true, val: m => m.jours },
   { cle: "guerres", label: "Guerres", num: true, val: m => m.guerres },
-  { cle: "moy", label: "Moy. étoiles", num: true, val: m => m.moy, decimales: 1 },
+  { cle: "moy", label: "Étoiles / guerre", num: true, val: m => m.moy, decimales: 1 },
   { cle: "tendance", label: "Tendance", tendance: true, val: m => m.tendance,
     rendre: m => el("span", "badge " + (CLASSES_TENDANCE[m.tendance] || "t-nonevalue"), m.tendance) },
   { cle: "derniere", label: "Dernière guerre", val: m => m.derniere },
