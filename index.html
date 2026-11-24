@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#121110">
-<title>Tableau de bord du clan</title>
+<title>APEX ⚔️ Stats, classements et guerres du clan</title>
+<meta name="description" content="Stats des joueurs, classements, comparateur et guerres du clan APEX.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="APEX ⚔️ Stats, classements et guerres du clan">
+<meta property="og:description" content="Stats des joueurs, classements, comparateur et guerres du clan APEX.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=Sora:wght@600;700&display=swap" rel="stylesheet">
@@ -481,25 +486,217 @@ input[type="search"]:focus-visible, select:focus-visible { border-color: var(--o
 
 .demo { background: linear-gradient(180deg, #ffe08a, #e8b830); }
 .erreur { background: #3a1f1f; border-width: 1px; }
+
+/* ===================== Compléments : recherche, clan, carrousel, fiche joueur ===================== */
+.banniere { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 28px; }
+.sous-titre { margin: 4px 0 0; color: var(--doux); font-size: 0.95rem; }
+.recherche-zone { margin-left: auto; width: min(360px, 100%); position: relative; }
+.recherche-zone input[type="search"] { width: 100%; }
+.recherche-zone select { margin-top: 8px; }
+
+.suggestions {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 6px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: #1d1b17;
+  border: 1px solid var(--ligne);
+  border-top-color: #5f4e24;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+.sugg {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.sugg:hover, .sugg:focus-visible { background: #2a261e; }
+.sugg:focus-visible { outline: 2px solid var(--or); }
+
+/* Mise à jour discrète en pied de page */
+.mentions { margin-top: 56px; }
+.maj-discret { display: block; margin-top: 6px; opacity: 0.75; }
+
+/* Noms cliquables */
+.lien-nom { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 800; color: var(--texte); }
+.lien-nom:hover { color: var(--or-clair); text-decoration: underline; text-underline-offset: 3px; }
+.lien-nom:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; border-radius: 4px; }
+#table-membres .lien-nom { display: block; }
+.classement li .lien-nom { font-weight: 600; justify-self: start; }
+.classement li.premier .lien-nom { font-weight: 800; }
+.war .tableau .lien-nom { font-weight: 600; }
+
+/* Bilan : valeurs textuelles */
+.chiffre .val.texte { font-size: 1.3rem; line-height: 1.4; background: none; color: var(--or-clair); -webkit-background-clip: border-box; background-clip: border-box; }
+
+/* Panneau du clan */
+.clan {
+  display: grid;
+  grid-template-columns: minmax(0, 270px) 1fr;
+  gap: 20px 32px;
+  align-items: center;
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(180deg, #221f1a 0%, #1a1815 100%);
+  border: 1px solid var(--ligne);
+  border-top-color: #5f4e24;
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 138, 0.08), 0 14px 32px rgba(0, 0, 0, 0.5);
+}
+.clan-id { display: flex; align-items: center; gap: 16px; }
+.clan-badge { width: 84px; height: auto; flex: none; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)); }
+.clan-nom { font-family: var(--titre); font-weight: 700; font-size: 1.3rem; color: var(--or-clair); margin: 0; }
+.clan-meta { margin: 2px 0 0; color: var(--doux); font-size: 0.85rem; }
+.clan-desc { grid-column: 1 / -1; margin: 0; padding-top: 14px; border-top: 1px solid var(--ligne); color: var(--doux); font-size: 0.9rem; white-space: pre-line; }
+.faits { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px 20px; }
+.fait { display: flex; flex-direction: column; }
+.fait .v { font-family: var(--titre); font-weight: 700; font-size: 1.1rem; color: var(--or-clair); overflow-wrap: anywhere; }
+.fait .l { color: var(--doux); font-size: 0.8rem; }
+
+/* Carrousel de classements */
+.entete-section { display: flex; align-items: center; gap: 14px; margin: 40px 0 14px; }
+.entete-section h2 { flex: 1; margin: 0; }
+.nav-carrousel { display: flex; gap: 8px; }
+.nav-carrousel button {
+  all: unset;
+  box-sizing: border-box;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid #5f4e24;
+  background: linear-gradient(180deg, #2f2819, #16130e);
+  color: var(--or-clair);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 138, 0.25), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.nav-carrousel button:hover { color: #fff; }
+.nav-carrousel button:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; }
+.carrousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 2px 2px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: #5f4e24 transparent;
+}
+.carrousel:focus-visible { outline: 2px solid var(--or); outline-offset: 4px; border-radius: 12px; }
+.carrousel .classement { flex: 0 0 min(300px, 84vw); scroll-snap-align: start; }
+
+/* Colonne et images des hôtels de ville */
+.hdv-cell.grand .hdv-img { height: 64px; max-width: 84px; }
+
+/* Fiche joueur */
+dialog.profil {
+  width: min(780px, calc(100% - 24px));
+  max-height: 88vh;
+  padding: 0;
+  color: var(--texte);
+  background: linear-gradient(180deg, #221f1a, #171512);
+  border: 1px solid var(--ligne);
+  border-top-color: #5f4e24;
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+dialog.profil[open] { display: flex; }
+dialog.profil::backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(3px); }
+.profil-contenu { position: relative; width: 100%; max-height: 88vh; overflow-y: auto; padding: 22px 22px 28px; }
+.fermer {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--creux);
+  border: 1px solid var(--ligne);
+  color: var(--doux);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.fermer:hover { color: var(--texte); }
+.fermer:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; }
+.profil-tete { display: flex; align-items: center; gap: 16px; padding-right: 48px; margin-bottom: 8px; }
+.profil-tete h3 { margin: 0; font-family: var(--titre); font-size: 1.6rem; font-weight: 700; color: var(--or-clair); overflow-wrap: anywhere; }
+.profil-sous { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--doux); }
+.profil-sous .tag { display: inline; }
+.profil-section { margin: 24px 0 12px; font-family: var(--titre); font-size: 1rem; font-weight: 600; color: var(--or-clair); }
+.rangs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 28px; }
+.rangs li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--ligne); }
+.rangs span { color: var(--doux); }
+.profil-contenu .tableau { box-shadow: none; background: #1d1b17; }
+.profil-actions { margin-top: 26px; }
+.bouton-or {
+  border: 0;
+  border-bottom: 3px solid #7a5a0c;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffe08a 0%, #e8b830 55%, #b98512 100%);
+  color: #2a1f05;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+.bouton-or:active { transform: translateY(1px); border-bottom-width: 2px; }
+.bouton-or:focus-visible { outline: 3px solid var(--texte); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .clan { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <div id="demo" class="demo" hidden>
-    Mode démonstration : les données affichées sont fictives. Renseigne les deux liens Google Sheets dans la section CONFIG du fichier pour afficher les vrais joueurs.
+    Mode démonstration : les données affichées sont fictives. Renseigne les liens Google Sheets dans la section CONFIG du fichier pour afficher les vrais joueurs.
   </div>
 
   <header class="banniere">
-    <h1 id="titre">Mon clan</h1>
-    <p class="maj" id="maj">Chargement des données…</p>
+    <div>
+      <h1 id="titre">APEX</h1>
+      <p class="sous-titre">Stats, classements et guerres du clan</p>
+    </div>
+    <div class="recherche-zone">
+      <input id="recherche" type="search" placeholder="Chercher un joueur" aria-label="Chercher un joueur" autocomplete="off">
+      <ul id="suggestions" class="suggestions" hidden></ul>
+      <select id="filtre" aria-label="Filtrer par tendance" hidden></select>
+    </div>
   </header>
 
   <section class="bilan" id="bilan" aria-label="Bilan du clan"></section>
+  <section class="clan" id="clan" aria-label="Le clan" hidden></section>
 
   <section aria-labelledby="h-classements">
-    <h2 id="h-classements">Classements</h2>
-    <div class="classements" id="classements"></div>
+    <div class="entete-section">
+      <h2 id="h-classements">Classements</h2>
+      <div class="nav-carrousel">
+        <button id="cl-prev" type="button" aria-label="Classements précédents">‹</button>
+        <button id="cl-next" type="button" aria-label="Classements suivants">›</button>
+      </div>
+    </div>
+    <div class="carrousel" id="classements" tabindex="0" aria-label="Classements, à faire défiler horizontalement"></div>
   </section>
 
   <section class="comparateur" id="comparateur" aria-labelledby="h-comparateur" hidden>
@@ -510,11 +707,7 @@ input[type="search"]:focus-visible, select:focus-visible { border-color: var(--o
 
   <section aria-labelledby="h-membres">
     <h2 id="h-membres">Membres</h2>
-    <div class="outils">
-      <input id="recherche" type="search" placeholder="Chercher un joueur" aria-label="Chercher un joueur">
-      <select id="filtre" aria-label="Filtrer par tendance"></select>
-    </div>
-    <p class="doux aide-cmp">Coche des joueurs dans la liste pour les comparer (jusqu’à 4).</p>
+    <p class="doux aide-cmp">Clique sur un joueur pour voir toutes ses stats, ou coche des joueurs pour les comparer (jusqu’à 4).</p>
     <div class="tableau"><table id="table-membres"><thead></thead><tbody></tbody></table></div>
     <p id="vide" class="doux" hidden>Aucun joueur ne correspond à cette recherche.</p>
   </section>
@@ -528,20 +721,30 @@ input[type="search"]:focus-visible, select:focus-visible { border-color: var(--o
 
   <footer class="mentions">
     Site de fans, gratuit et non commercial. Ce contenu n’est ni affilié à Supercell, ni approuvé, parrainé ou validé par Supercell, qui n’en est pas responsable. Voir la <a href="https://supercell.com/en/fan-content-policy/">politique de Supercell sur les contenus de fans</a>.
+    <span id="maj" class="maj-discret">Chargement des données…</span>
   </footer>
 </div>
 
 <button id="btn-cmp" class="flottant" type="button" hidden>Voir la comparaison</button>
 
+<dialog id="profil" class="profil" aria-labelledby="profil-titre">
+  <div class="profil-contenu">
+    <button id="profil-fermer" class="fermer" type="button" aria-label="Fermer">×</button>
+    <div id="profil-corps"></div>
+  </div>
+</dialog>
+
 <script>
 /* ============================ CONFIG ============================ */
 const CONFIG = {
-  NOM_CLAN: "Mon clan",
-  // Liens de publication CSV de Google Sheets (voir les instructions)
-  CSV_MEMBRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=2139490637&single=true&output=csv",   // feuille « Membres_Public » (surtout pas « Membres »)
+  NOM_CLAN: "APEX",
+  // Liens de publication CSV de Google Sheets
+  CSV_MEMBRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=2139490637&single=true&output=csv",   // feuille « Membres_Public »
   CSV_GUERRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=675091606&single=true&output=csv",   // feuille « Archives_Guerres »
-  IMAGES_HDV: "hdv/{n}.webp",  // images des hôtels de ville (WebP) ; "" pour désactiver
-  AFFICHER_TENDANCE: false,  // laisser false : la feuille publique ne contient pas la tendance
+  CSV_CLAN: "",                     // feuille « Clan_Public » (infos et rang du clan)
+  IMAGES_HDV: "hdv/{n}.webp",       // hôtels de ville (WebP) ; "" pour désactiver
+  IMAGES_HDO: "hdo/{n}.webp",       // hôtels de ville de la base des ouvriers (niveaux 1 à 10) ; "" pour désactiver
+  AFFICHER_TENDANCE: false,         // laisser false : la feuille publique ne contient pas la tendance
   NB_GUERRES_AFFICHEES: 10,
   RAFRAICHIR_MINUTES: 5
 };
@@ -549,16 +752,25 @@ const CONFIG = {
 
 const ORDRE_GRADES = { "Chef": 0, "Adjoint": 1, "Aîné": 2, "Membre": 3 };
 const CLASSES_TENDANCE = { "Actif": "t-actif", "Nouveau": "t-nouveau", "Inactif": "t-inactif", "Non évalué": "t-nonevalue" };
+const FREQUENCES_GUERRE = {
+  always: "Toujours",
+  moreThanOncePerWeek: "Plus d’une fois par semaine",
+  oncePerWeek: "Une fois par semaine",
+  lessThanOncePerWeek: "Moins d’une fois par semaine",
+  never: "Jamais"
+};
+const MAX_COMPARE = 4;
+const COULEURS_J = ["#5cb8ff", "#ff8a5b", "#62d26f", "#c39bff"];
 
 /* ------------------------- Données de démonstration ------------------------- */
 const DEMO_MEMBRES = [
-  ["Grade","Nom","HDV","Jours","Guerres","Moy","Tendance","Dernière","Conseil","Dons","Reçus","Ratio","Tag","Arrivée"],
-  ["Chef","Aigle Noir","HDV 16",210,9,2.7,"Actif","6⭐ (195%)","Stable",620,410,1.5,"#2PP0AAA1",""],
-  ["Adjoint","Lumi","HDV 16",180,9,2.4,"Actif","5⭐ (170%)","Stable",540,500,1.1,"#8QQ1BBB2",""],
-  ["Aîné","Titan","HDV 15",96,8,2.1,"Actif","4⭐ (150%)","Stable",300,280,1.1,"#9LL2CCC3",""],
-  ["Membre","Pixel","HDV 15",40,6,1.8,"Actif","4⭐ (140%)","Stable",150,320,0.5,"#2YY3DDD4",""],
-  ["Membre","Nova","HDV 14",22,3,1.0,"Inactif","2⭐ (80%)","À surveiller",20,260,0.1,"#VV4EEE5",""],
-  ["Membre","Zéphyr","HDV 13",3,0,0,"Nouveau","n/a","Période d'essai",0,0,0,"#GG5FFF6",""]
+  ["Grade","Nom","HDV","Jours","Guerres","Moy","Tendance","Dernière","Conseil","Dons","Reçus","Ratio","Tag","Arrivée","Trophées","Trophées ouvriers","Ligue","Niveau XP","Rang","Rang précédent","HDV ouvriers"],
+  ["Chef","Aigle Noir","HDV 16",210,9,2.7,"","6⭐ (195%)","",620,410,1.5,"#2PP0AAA1","",5400,3100,"Champion League I",231,1,2,9],
+  ["Adjoint","Lumi","HDV 16",180,9,2.4,"","5⭐ (170%)","",540,500,1.1,"#8QQ1BBB2","",5100,2900,"Champion League II",220,2,1,9],
+  ["Aîné","Titan","HDV 15",96,8,2.1,"","4⭐ (150%)","",300,280,1.1,"#9LL2CCC3","",4700,3300,"Master League I",205,3,5,8],
+  ["Membre","Pixel","HDV 15",40,6,1.8,"","4⭐ (140%)","",150,320,0.5,"#2YY3DDD4","",4300,2500,"Master League II",190,4,6,8],
+  ["Membre","Nova","HDV 14",22,3,1.0,"","2⭐ (80%)","",20,260,0.1,"#VV4EEE5","",3900,2100,"Crystal League I",170,5,4,7],
+  ["Membre","Zéphyr","HDV 13",3,0,0,"","n/a","",0,0,0,"#GG5FFF6","",3000,1500,"Gold League I",120,6,6,6]
 ];
 const DEMO_GUERRES = [
   ["ID","Date","Type","Adversaire","Place","Joueur","Étoiles 1","Dest. 1","Cible 1","Étoiles 2","Dest. 2","Cible 2","Total","Note"],
@@ -569,7 +781,17 @@ const DEMO_GUERRES = [
   ["Les Loups_20261030T180000.000Z","","Classique","Les Loups","N°4","Nova",0,"0%","-",0,"0%","-","0%","Absent"],
   ["Les Corbeaux_20261026T180000.000Z","","Classique","--- LES CORBEAUX : 60⭐ VS 48⭐ ---","","","","","","","","","",""],
   ["Les Corbeaux_20261026T180000.000Z","","Classique","Les Corbeaux","N°1","Aigle Noir",2,"90%","N°1",3,"100%","N°3","190%","Correct"],
-  ["Les Corbeaux_20261026T180000.000Z","","Classique","Les Corbeaux","N°2","Lumi",3,"100%","N°2",1,"60%","N°5","160%","Correct"]
+  ["Les Corbeaux_20261026T180000.000Z","","Classique","Les Corbeaux","N°2","Lumi",3,"100%","N°2",1,"60%","N°5","160%","Correct"],
+  ["Les Corbeaux_20261026T180000.000Z","","Classique","Les Corbeaux","N°3","Titan",2,"85%","N°4",2,"88%","N°6","173%","Correct"]
+];
+const DEMO_CLAN = [
+  ["cle","valeur"],
+  ["nom","APEX"],["tag","#2ABC123"],["niveau",14],["points",38450],["points_ouvriers",41200],["points_capitale",52000],
+  ["ligue_guerre","Crystal League I"],["ligue_capitale","Diamond League II"],["niveau_capitale",9],
+  ["victoires_guerre",128],["defaites_guerre",47],["egalites_guerre",3],["serie_victoires",6],["membres",6],
+  ["localisation","France"],["frequence_guerre","always"],["trophees_requis",3000],["hdv_requis",12],["badge",""],
+  ["description","Clan francophone actif : guerres tous les jours, dons réguliers et bonne ambiance."],
+  ["rang_pays",38],["rang_monde",1204],["rang_capitale_pays",12],["rang_capitale_monde",""]
 ];
 
 /* ------------------------------- Utilitaires ------------------------------- */
@@ -616,7 +838,7 @@ function parseCSV(texte) {
 async function chargerCSV(url, nom) {
   let reponse;
   try {
-    // Requête GET simple, sans option ni en-tête personnalisé (évite toute vérification préalable du navigateur)
+    // Requête GET simple, sans option ni en-tête personnalisé
     reponse = await fetch(url);
   } catch (e) {
     console.error("Échec de la lecture de la feuille " + nom, e);
@@ -627,20 +849,8 @@ async function chargerCSV(url, nom) {
 }
 
 /* ------------------------------- État ------------------------------- */
-const etat = { membres: [], guerres: [], tri: { cle: "hdv", dir: -1 }, selection: [] };
-
-const MAX_COMPARE = 4;
-const COULEURS_J = ["#5cb8ff", "#ff8a5b", "#62d26f", "#c39bff"];
+const etat = { membres: [], guerres: [], clan: {}, tri: { cle: "hdv", dir: -1 }, selection: [] };
 const cleMembre = m => m.tag || m.nom;
-
-const METRIQUES = [
-  { label: "Hôtel de ville", val: m => m.hdv, fmt: v => "HDV " + fmt(v) },
-  { label: "Jours au clan", val: m => m.jours, fmt: v => fmt(v) + " j" },
-  { label: "Guerres jouées", val: m => m.guerres, fmt: v => fmt(v) },
-  { label: "Étoiles par guerre", val: m => m.moy, fmt: v => fmt(v, 1) },
-  { label: "Dons donnés", val: m => m.dons, fmt: v => fmt(v) },
-  { label: "Dons reçus", val: m => m.recus, fmt: v => fmt(v) }
-];
 
 function normaliserMembre(r) {
   return {
@@ -654,8 +864,15 @@ function normaliserMembre(r) {
     derniere: r[7] || "n/a",
     dons: num(r[9]),
     recus: num(r[10]),
-    ratio: num(r[11]),
-    tag: r[12] || ""
+    tag: r[12] || "",
+    tro: num(r[14]),
+    troO: num(r[15]),
+    ligue: r[16] || "",
+    xp: num(r[17]),
+    rangClan: num(r[18]),
+    rangPrec: num(r[19]),
+    hdo: num(r[20]),
+    sg: { guerres: 0, faites: 0, trois: 0, dest: 0 }
   };
 }
 
@@ -671,19 +888,65 @@ function grouperGuerres(lignes) {
   return guerres.reverse(); // les plus récentes en premier
 }
 
-/* ------------------------------- Colonnes ------------------------------- */
-function celluleHdv(m) {
-  const boite = el("span", "hdv-cell");
-  if (CONFIG.IMAGES_HDV && m.hdv > 0) {
+function attaqueFaite(etoiles, destruction, cible) {
+  return !(cible === "-" && num(etoiles) === 0 && num(destruction) === 0);
+}
+
+function analyserTitreGuerre(titre) {
+  const m = String(titre).match(/^(.*?)\s*:\s*(\d+)\s*⭐\s*VS\s*(\d+)\s*⭐/i);
+  if (!m) return { adversaire: titre || "Guerre", issue: "draw", verdict: "", score: "" };
+  const eux = +m[2], nous = +m[3];
+  let issue = "draw", verdict = "Égalité d’étoiles";
+  if (nous > eux) { issue = "win"; verdict = "Victoire"; }
+  else if (nous < eux) { issue = "lose"; verdict = "Défaite"; }
+  return { adversaire: m[1].toLowerCase(), issue, verdict, score: nous + "★ contre " + eux + "★" };
+}
+
+// Statistiques de guerre de chaque joueur, calculées à partir des archives
+function calculerStatsGuerre() {
+  const stats = {};
+  etat.guerres.forEach(g => {
+    g.membres.forEach(r => {
+      if (String(r[13] || "").startsWith("En attente")) return;
+      const s = stats[r[5]] || (stats[r[5]] = { guerres: 0, faites: 0, trois: 0, dest: 0 });
+      s.guerres++;
+      [[r[6], r[7], r[8]], [r[9], r[10], r[11]]].forEach(([e, d, c]) => {
+        if (!attaqueFaite(e, d, c)) return;
+        s.faites++;
+        if (num(e) === 3) s.trois++;
+        s.dest += num(d);
+      });
+    });
+  });
+  etat.membres.forEach(m => { m.sg = stats[m.nom] || { guerres: 0, faites: 0, trois: 0, dest: 0 }; });
+}
+
+/* ------------------------------- Critères de comparaison ------------------------------- */
+const METRIQUES = [
+  { label: "Hôtel de ville", val: m => m.hdv, fmt: v => "HDV " + fmt(v) },
+  { label: "Trophées", val: m => m.tro, fmt: v => fmt(v), visible: () => etat.membres.some(m => m.tro > 0) },
+  { label: "Trophées de la base des ouvriers", val: m => m.troO, fmt: v => fmt(v), visible: () => etat.membres.some(m => m.troO > 0) },
+  { label: "Jours au clan", val: m => m.jours, fmt: v => fmt(v) + " j" },
+  { label: "Guerres jouées", val: m => m.guerres, fmt: v => fmt(v) },
+  { label: "Étoiles par guerre", val: m => m.moy, fmt: v => fmt(v, 1) },
+  { label: "Dons donnés", val: m => m.dons, fmt: v => fmt(v) },
+  { label: "Dons reçus", val: m => m.recus, fmt: v => fmt(v) }
+];
+const metriquesVisibles = () => METRIQUES.filter(x => !x.visible || x.visible());
+
+/* ------------------------------- Colonnes du tableau ------------------------------- */
+function celluleNiveau(niveau, motif, taille) {
+  const boite = el("span", "hdv-cell" + (taille ? " " + taille : ""));
+  if (motif && niveau > 0) {
     const img = document.createElement("img");
     img.className = "hdv-img";
-    img.src = CONFIG.IMAGES_HDV.replace("{n}", m.hdv);
+    img.src = motif.replace("{n}", niveau);
     img.alt = "";
     img.loading = "lazy";
     img.addEventListener("error", () => img.remove()); // image absente : on garde seulement le numéro
     boite.append(img);
   }
-  boite.append(el("span", "hdv", m.hdv || "—"));
+  boite.append(el("span", "hdv", niveau || "—"));
   return boite;
 }
 
@@ -700,12 +963,17 @@ const COLONNES = [
       case_.setAttribute("aria-label", "Comparer " + m.nom);
       case_.addEventListener("change", () => basculer(m));
       const texte = el("div");
-      texte.append(el("span", "nom", m.nom), el("span", "tag", m.tag));
+      const bouton = el("button", "lien-nom", m.nom);
+      bouton.type = "button";
+      bouton.addEventListener("click", () => ouvrirProfil(m));
+      texte.append(bouton, el("span", "tag", m.tag));
       boite.append(case_, texte);
       return boite;
     } },
-  { cle: "hdv", label: "HDV", num: true, val: m => m.hdv,
-    rendre: m => celluleHdv(m) },
+  { cle: "hdv", label: "HDV", num: true, val: m => m.hdv, rendre: m => celluleNiveau(m.hdv, CONFIG.IMAGES_HDV) },
+  { cle: "hdo", label: "Ouvriers", num: true, val: m => m.hdo,
+    optionnel: () => etat.membres.some(m => m.hdo > 0),
+    rendre: m => celluleNiveau(m.hdo, CONFIG.IMAGES_HDO) },
   { cle: "jours", label: "Jours au clan", num: true, val: m => m.jours },
   { cle: "guerres", label: "Guerres", num: true, sep: true, val: m => m.guerres },
   { cle: "moy", label: "Étoiles / guerre", num: true, val: m => m.moy, decimales: 1 },
@@ -717,7 +985,7 @@ const COLONNES = [
 ];
 
 function colonnesActives() {
-  return COLONNES.filter(c => CONFIG.AFFICHER_TENDANCE || !c.tendance);
+  return COLONNES.filter(c => (CONFIG.AFFICHER_TENDANCE || !c.tendance) && (!c.optionnel || c.optionnel()));
 }
 
 function classesCellule(c) {
@@ -753,7 +1021,7 @@ function rendreMembres() {
   const q = $("recherche").value.trim().toLowerCase();
   const filtre = $("filtre").value;
   const colonnes = colonnesActives();
-  const colTri = COLONNES.find(c => c.cle === etat.tri.cle) || COLONNES[2];
+  const colTri = colonnes.find(c => c.cle === etat.tri.cle) || COLONNES[2];
 
   const liste = etat.membres
     .filter(m => (!q || m.nom.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q)) && (!filtre || m.tendance === filtre))
@@ -781,25 +1049,6 @@ function rendreMembres() {
   $("vide").hidden = liste.length > 0;
 }
 
-function rendreBilan() {
-  const m = etat.membres;
-  const bilan = $("bilan");
-  bilan.replaceChildren();
-  const ajouter = (valeur, label) => {
-    const c = el("div", "chiffre");
-    c.append(el("span", "val", valeur), el("span", "lbl", label));
-    bilan.append(c);
-  };
-  ajouter(fmt(m.length), "Membres");
-  if (CONFIG.AFFICHER_TENDANCE) {
-    ajouter(fmt(m.filter(x => x.tendance === "Actif").length), "Actifs en guerre");
-    ajouter(fmt(m.filter(x => x.tendance === "Inactif").length), "Inactifs");
-  }
-  ajouter(fmt(m.reduce((s, x) => s + x.dons, 0)), "Dons de la saison");
-  const jouent = m.filter(x => x.guerres > 0);
-  ajouter(jouent.length ? fmt(jouent.reduce((s, x) => s + x.moy, 0) / jouent.length, 1) : "—", "Étoiles par guerre en moyenne");
-}
-
 function remplirFiltre() {
   const select = $("filtre");
   select.replaceChildren();
@@ -808,26 +1057,119 @@ function remplirFiltre() {
   select.hidden = !CONFIG.AFFICHER_TENDANCE;
 }
 
+/* ------------------------------- Rendu : bilan et clan ------------------------------- */
+function rendreBilan() {
+  const m = etat.membres, c = etat.clan, bilan = $("bilan");
+  bilan.replaceChildren();
+  const ajouter = (valeur, label, texte) => {
+    const x = el("div", "chiffre");
+    x.append(el("span", "val" + (texte ? " texte" : ""), valeur), el("span", "lbl", label));
+    bilan.append(x);
+  };
+  ajouter(fmt(m.length), "Membres");
+  ajouter(fmt(m.reduce((s, x) => s + x.dons, 0)), "Dons de la saison");
+  if (num(c.rang_pays) > 0) ajouter("n° " + fmt(num(c.rang_pays)), "Rang du clan" + (c.localisation ? " en " + c.localisation : ""));
+  else if (num(c.rang_monde) > 0) ajouter("n° " + fmt(num(c.rang_monde)), "Rang mondial du clan");
+  else if (num(c.points) > 0) ajouter(fmt(num(c.points)), "Points du clan");
+  if (c.ligue_guerre) ajouter(c.ligue_guerre, "Ligue de guerre", true);
+  if (CONFIG.AFFICHER_TENDANCE) {
+    ajouter(fmt(m.filter(x => x.tendance === "Actif").length), "Actifs en guerre");
+    ajouter(fmt(m.filter(x => x.tendance === "Inactif").length), "Inactifs");
+  }
+}
+
+function fait(grille, valeur, label) {
+  if (valeur === "" || valeur === null || valeur === undefined) return;
+  const f = el("div", "fait");
+  f.append(el("span", "v", valeur), el("span", "l", label));
+  grille.append(f);
+}
+
+function rendreClan() {
+  const c = etat.clan, zone = $("clan");
+  if (!c.nom) { zone.hidden = true; return; }
+  zone.hidden = false;
+  zone.replaceChildren();
+
+  const id = el("div", "clan-id");
+  if (c.badge) {
+    const img = document.createElement("img");
+    img.className = "clan-badge";
+    img.src = c.badge;
+    img.alt = "Blason du clan";
+    img.addEventListener("error", () => img.remove());
+    id.append(img);
+  }
+  const texte = el("div");
+  texte.append(el("p", "clan-nom", c.nom));
+  if (c.tag) texte.append(el("p", "clan-meta", c.tag));
+  if (c.localisation) texte.append(el("p", "clan-meta", c.localisation));
+  id.append(texte);
+  zone.append(id);
+
+  const g = el("div", "faits");
+  if (num(c.niveau) > 0) fait(g, "Niveau " + fmt(num(c.niveau)), "Niveau du clan");
+  if (num(c.points) > 0) fait(g, fmt(num(c.points)), "Points du clan");
+  if (num(c.rang_pays) > 0) fait(g, "n° " + fmt(num(c.rang_pays)), "Rang" + (c.localisation ? " en " + c.localisation : " dans le pays"));
+  if (num(c.rang_monde) > 0) fait(g, "n° " + fmt(num(c.rang_monde)), "Rang mondial");
+  fait(g, c.ligue_guerre, "Ligue de guerre");
+  const v = num(c.victoires_guerre), d = num(c.defaites_guerre), n = num(c.egalites_guerre);
+  if (v + d + n > 0) fait(g, v + " V / " + d + " D / " + n + " N", "Bilan des guerres");
+  if (num(c.serie_victoires) > 0) fait(g, fmt(num(c.serie_victoires)), "Série de victoires");
+  if (num(c.niveau_capitale) > 0) fait(g, "Niveau " + fmt(num(c.niveau_capitale)), "Capitale du clan");
+  if (num(c.points_capitale) > 0) fait(g, fmt(num(c.points_capitale)), "Points de capitale");
+  fait(g, c.ligue_capitale, "Ligue de capitale");
+  if (num(c.rang_capitale_pays) > 0) fait(g, "n° " + fmt(num(c.rang_capitale_pays)), "Rang de la capitale" + (c.localisation ? " en " + c.localisation : ""));
+  if (num(c.rang_capitale_monde) > 0) fait(g, "n° " + fmt(num(c.rang_capitale_monde)), "Rang mondial de la capitale");
+  if (num(c.points_ouvriers) > 0) fait(g, fmt(num(c.points_ouvriers)), "Points de la base des ouvriers");
+  fait(g, FREQUENCES_GUERRE[c.frequence_guerre] || "", "Fréquence de guerre");
+  if (num(c.hdv_requis) > 0) fait(g, "HDV " + fmt(num(c.hdv_requis)), "Niveau d’HDV minimum");
+  if (num(c.trophees_requis) > 0) fait(g, fmt(num(c.trophees_requis)), "Trophées minimum");
+  zone.append(g);
+
+  if (c.description) zone.append(el("p", "clan-desc", c.description));
+}
+
 /* ------------------------------- Rendu : classements ------------------------------- */
 function rendrePodiums() {
   const zone = $("classements");
   zone.replaceChildren();
+  const M = etat.membres;
   const defs = [
-    { titre: "Meilleures moyennes d’étoiles", sous: "Au moins 3 guerres jouées", liste: etat.membres.filter(m => m.guerres >= 3), val: m => m.moy, fmt: v => fmt(v, 1) + "★" },
-    { titre: "Plus grands donateurs", sous: "Dons de la saison en cours", liste: etat.membres, val: m => m.dons, fmt: v => fmt(v) },
-    { titre: "Vétérans des guerres", sous: "Nombre de guerres jouées", liste: etat.membres, val: m => m.guerres, fmt: v => fmt(v) }
+    { titre: "Meilleures moyennes d’étoiles", sous: "Au moins 3 guerres jouées", liste: M.filter(m => m.guerres >= 3), val: m => m.moy, fmt: v => fmt(v, 1) + "★" },
+    { titre: "Chasseurs de 3 étoiles", sous: "Attaques à 3 étoiles en guerre", liste: M, val: m => m.sg.trois, fmt: v => fmt(v) },
+    { titre: "Les plus assidus", sous: "Attaques utilisées, au moins 3 guerres", liste: M.filter(m => m.sg.guerres >= 3), val: m => m.sg.faites / (m.sg.guerres * 2), fmt: v => fmt(v * 100) + " %" },
+    { titre: "Destruction moyenne", sous: "Par attaque, au moins 4 attaques", liste: M.filter(m => m.sg.faites >= 4), val: m => m.sg.dest / m.sg.faites, fmt: v => fmt(v) + " %" },
+    { titre: "Plus grands donateurs", sous: "Dons de la saison en cours", liste: M, val: m => m.dons, fmt: v => fmt(v) },
+    { titre: "Généreux sans compter", sous: "Dons donnés moins dons reçus", liste: M, val: m => m.dons - m.recus, fmt: v => "+" + fmt(v) },
+    { titre: "Vétérans des guerres", sous: "Nombre de guerres jouées", liste: M, val: m => m.guerres, fmt: v => fmt(v) },
+    { titre: "Rois des trophées", sous: "Trophées du village principal", liste: M, val: m => m.tro, fmt: v => fmt(v), optionnel: true },
+    { titre: "Maîtres de la base des ouvriers", sous: "Trophées de la base des ouvriers", liste: M, val: m => m.troO, fmt: v => fmt(v), optionnel: true },
+    { titre: "Montée au classement", sous: "Places gagnées dans le clan", liste: M.filter(m => m.rangPrec > 0 && m.rangClan > 0), val: m => m.rangPrec - m.rangClan, fmt: v => "+" + fmt(v), optionnel: true },
+    { titre: "Les plus expérimentés", sous: "Niveau d’expérience", liste: M, val: m => m.xp, fmt: v => fmt(v), optionnel: true },
+    { titre: "Les plus anciens", sous: "Jours passés dans le clan", liste: M, val: m => m.jours, fmt: v => fmt(v) + " j" },
+    { titre: "Bienvenue aux nouveaux", sous: "Arrivés depuis moins de 14 jours", liste: M.filter(m => m.jours < 14), val: m => m.jours, fmt: v => v === 0 ? "aujourd’hui" : "depuis " + fmt(v) + " j", croissant: true, garderZero: true, optionnel: true }
   ];
+
   defs.forEach(d => {
+    const top = d.liste
+      .filter(m => d.garderZero || d.val(m) > 0)
+      .sort((a, b) => d.croissant ? d.val(a) - d.val(b) : d.val(b) - d.val(a))
+      .slice(0, 5);
+    if (d.optionnel && !top.length) return;
+
     const bloc = el("div", "classement");
     bloc.append(el("h3", "", d.titre), el("p", "sous", d.sous));
-    const top = d.liste.filter(m => d.val(m) > 0).sort((a, b) => d.val(b) - d.val(a)).slice(0, 5);
     if (!top.length) {
       bloc.append(el("p", "doux", "Pas encore de données."));
     } else {
       const ol = el("ol");
       top.forEach((m, i) => {
         const li = el("li", i === 0 ? "premier" : "");
-        li.append(el("span", "rang", String(i + 1)), el("span", "n", m.nom), el("span", "doux", d.fmt(d.val(m))));
+        const bouton = el("button", "lien-nom", m.nom);
+        bouton.type = "button";
+        bouton.addEventListener("click", () => ouvrirProfil(m));
+        li.append(el("span", "rang", String(i + 1)), bouton, el("span", "doux", d.fmt(d.val(m))));
         ol.append(li);
       });
       bloc.append(ol);
@@ -886,7 +1228,7 @@ function rendreComparateur() {
 
   const conteneur = $("metriques");
   conteneur.replaceChildren();
-  METRIQUES.forEach(met => {
+  metriquesVisibles().forEach(met => {
     const max = Math.max(1e-9, ...etat.membres.map(met.val));
     const meilleur = Math.max(...sel.map(met.val));
     const bloc = el("div", "metrique");
@@ -912,13 +1254,29 @@ function rendreComparateur() {
 /* ------------------------------- Rendu : guerres ------------------------------- */
 function attaque(etoiles, destruction, cible) {
   const td = el("td");
-  if (cible === "-" && num(etoiles) === 0 && num(destruction) === 0) {
+  if (!attaqueFaite(etoiles, destruction, cible)) {
     td.append(el("span", "doux", "Pas d’attaque"));
     return td;
   }
   td.append(el("span", "fort", etoiles + "★ " + destruction));
   if (cible !== "-") td.append(el("span", "cible", "cible " + cible));
   return td;
+}
+
+function classeNote(note) {
+  return note.startsWith("Absent") ? "note-absent" : note.startsWith("Incomplet") ? "note-incomplet" : "";
+}
+
+function enteteTableau(titres) {
+  const thead = document.createElement("thead");
+  const tr = el("tr");
+  titres.forEach(h => {
+    const th = el("th", "", h);
+    th.style.padding = "11px 14px";
+    tr.append(th);
+  });
+  thead.append(tr);
+  return thead;
 }
 
 function rendreGuerres() {
@@ -930,50 +1288,157 @@ function rendreGuerres() {
   }
 
   etat.guerres.slice(0, CONFIG.NB_GUERRES_AFFICHEES).forEach(g => {
-    const m = g.titre.match(/^(.*?)\s*:\s*(\d+)\s*⭐\s*VS\s*(\d+)\s*⭐/i);
-    let issue = "draw", verdict = "", adversaire = g.titre || "Guerre", score = "";
-    if (m) {
-      adversaire = m[1].toLowerCase();
-      const eux = +m[2], nous = +m[3];
-      score = nous + "★ contre " + eux + "★";
-      if (nous > eux) { issue = "win"; verdict = "Victoire"; }
-      else if (nous < eux) { issue = "lose"; verdict = "Défaite"; }
-      else verdict = "Égalité d’étoiles";
-    }
-
-    const d = el("details", "war " + issue);
+    const a = analyserTitreGuerre(g.titre);
+    const d = el("details", "war " + a.issue);
     const s = el("summary");
-    s.append(el("span", "adversaire", adversaire));
-    if (verdict) s.append(el("span", "verdict", verdict));
-    if (score) s.append(el("span", "score", score));
+    s.append(el("span", "adversaire", a.adversaire));
+    if (a.verdict) s.append(el("span", "verdict", a.verdict));
+    if (a.score) s.append(el("span", "score", a.score));
     d.append(s);
 
     const zone = el("div", "tableau");
     const t = document.createElement("table");
-    const tr0 = el("tr");
-    ["Place", "Joueur", "Attaque 1", "Attaque 2", "Total", "Bilan"].forEach(h => {
-      const th = el("th", "", h);
-      th.style.padding = "11px 14px";
-      tr0.append(th);
-    });
-    const thead = document.createElement("thead");
-    thead.append(tr0);
     const tbody = document.createElement("tbody");
-
     g.membres.forEach(r => {
       const tr = el("tr");
-      tr.append(el("td", "doux", r[4]), el("td", "", r[5]), attaque(r[6], r[7], r[8]), attaque(r[9], r[10], r[11]), el("td", "", r[12]));
+      const tdNom = el("td");
+      const membre = etat.membres.find(x => x.nom === r[5]);
+      if (membre) {
+        const b = el("button", "lien-nom", r[5]);
+        b.type = "button";
+        b.addEventListener("click", () => ouvrirProfil(membre));
+        tdNom.append(b);
+      } else tdNom.textContent = r[5];
       const note = String(r[13] || "");
-      const classeNote = note.startsWith("Absent") ? "note-absent" : note.startsWith("Incomplet") ? "note-incomplet" : "";
-      tr.append(el("td", classeNote, note));
+      tr.append(el("td", "doux", r[4]), tdNom, attaque(r[6], r[7], r[8]), attaque(r[9], r[10], r[11]), el("td", "", r[12]), el("td", classeNote(note), note));
       tbody.append(tr);
     });
-
-    t.append(thead, tbody);
+    t.append(enteteTableau(["Place", "Joueur", "Attaque 1", "Attaque 2", "Total", "Bilan"]), tbody);
     zone.append(t);
     d.append(zone);
     conteneur.append(d);
   });
+}
+
+/* ------------------------------- Fiche joueur ------------------------------- */
+function ouvrirProfil(m) {
+  const corps = $("profil-corps");
+  corps.replaceChildren();
+
+  // En-tête
+  const tete = el("div", "profil-tete");
+  tete.append(celluleNiveau(m.hdv, CONFIG.IMAGES_HDV, "grand"));
+  const ident = el("div");
+  const titre = el("h3", "", m.nom);
+  titre.id = "profil-titre";
+  const sous = el("p", "profil-sous");
+  sous.append(el("span", m.grade === "Chef" ? "grade chef" : "grade", m.grade));
+  if (m.tag) sous.append(el("span", "tag", m.tag));
+  if (m.ligue) sous.append(el("span", "tag", m.ligue));
+  ident.append(titre, sous);
+  tete.append(ident);
+  corps.append(tete);
+
+  // Profil
+  corps.append(el("h4", "profil-section", "Profil"));
+  const g1 = el("div", "faits");
+  fait(g1, "HDV " + m.hdv, "Hôtel de ville");
+  if (m.hdo > 0) fait(g1, "Niveau " + m.hdo, "Hôtel de ville des ouvriers");
+  if (m.tro > 0) fait(g1, fmt(m.tro), "Trophées");
+  if (m.troO > 0) fait(g1, fmt(m.troO), "Trophées de la base des ouvriers");
+  if (m.xp > 0) fait(g1, fmt(m.xp), "Niveau d’expérience");
+  if (m.rangClan > 0) {
+    const delta = m.rangPrec > 0 ? m.rangPrec - m.rangClan : 0;
+    fait(g1, "n° " + m.rangClan + (delta > 0 ? "  ▲ " + delta : delta < 0 ? "  ▼ " + (-delta) : ""), "Rang dans le clan");
+  }
+  fait(g1, fmt(m.jours) + " j", "Dans le clan depuis");
+  fait(g1, fmt(m.dons), "Dons donnés");
+  fait(g1, fmt(m.recus), "Dons reçus");
+  if (CONFIG.AFFICHER_TENDANCE) fait(g1, m.tendance, "Tendance");
+  corps.append(g1);
+
+  // Guerres
+  corps.append(el("h4", "profil-section", "En guerre"));
+  const g2 = el("div", "faits");
+  fait(g2, fmt(m.guerres), "Guerres jouées");
+  fait(g2, fmt(m.moy, 1), "Étoiles par guerre");
+  if (m.sg.guerres > 0) {
+    fait(g2, fmt(m.sg.faites) + " / " + fmt(m.sg.guerres * 2), "Attaques réalisées");
+    fait(g2, fmt(m.sg.trois), "Attaques à 3 étoiles");
+    if (m.sg.faites > 0) fait(g2, fmt(m.sg.dest / m.sg.faites) + " %", "Destruction moyenne par attaque");
+  }
+  if (m.derniere && m.derniere !== "n/a") fait(g2, m.derniere, "Dernière guerre");
+  corps.append(g2);
+
+  // Place dans le clan
+  corps.append(el("h4", "profil-section", "Sa place dans le clan"));
+  const rangs = el("ul", "rangs");
+  metriquesVisibles().forEach(met => {
+    const li = el("li");
+    li.append(el("span", "", met.label), el("strong", "", "n° " + rang(m, met) + " sur " + etat.membres.length));
+    rangs.append(li);
+  });
+  corps.append(rangs);
+
+  // Historique
+  const lignes = [];
+  etat.guerres.slice(0, CONFIG.NB_GUERRES_AFFICHEES).forEach(g => {
+    const r = g.membres.find(x => x[5] === m.nom);
+    if (r) lignes.push({ g, r });
+  });
+  if (lignes.length) {
+    corps.append(el("h4", "profil-section", "Ses dernières guerres"));
+    const zone = el("div", "tableau");
+    const t = document.createElement("table");
+    const tbody = document.createElement("tbody");
+    lignes.forEach(({ g, r }) => {
+      const a = analyserTitreGuerre(g.titre);
+      const tr = el("tr");
+      const tdG = el("td");
+      tdG.append(el("span", "fort", a.adversaire), el("span", "cible", a.verdict));
+      const note = String(r[13] || "");
+      tr.append(tdG, attaque(r[6], r[7], r[8]), attaque(r[9], r[10], r[11]), el("td", "", r[12]), el("td", classeNote(note), note));
+      tbody.append(tr);
+    });
+    t.append(enteteTableau(["Guerre", "Attaque 1", "Attaque 2", "Total", "Bilan"]), tbody);
+    zone.append(t);
+    corps.append(zone);
+  }
+
+  // Action
+  const actions = el("div", "profil-actions");
+  const bouton = el("button", "bouton-or");
+  bouton.type = "button";
+  const libelle = () => etat.selection.includes(cleMembre(m)) ? "Retirer de la comparaison" : "Ajouter à la comparaison";
+  bouton.textContent = libelle();
+  bouton.addEventListener("click", () => { basculer(m); bouton.textContent = libelle(); });
+  actions.append(bouton);
+  corps.append(actions);
+
+  const d = $("profil");
+  document.documentElement.style.overflow = "hidden";
+  if (!d.open) d.showModal();
+  $("profil").querySelector(".profil-contenu").scrollTop = 0;
+}
+
+/* ------------------------------- Recherche ------------------------------- */
+function majSuggestions() {
+  const q = $("recherche").value.trim().toLowerCase();
+  const ul = $("suggestions");
+  ul.replaceChildren();
+  if (!q) { ul.hidden = true; return; }
+  const trouves = etat.membres.filter(m => m.nom.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q)).slice(0, 6);
+  if (!trouves.length) { ul.hidden = true; return; }
+  trouves.forEach(m => {
+    const li = el("li");
+    const b = el("button", "sugg");
+    b.type = "button";
+    b.append(el("span", "nom", m.nom), el("span", "doux", "HDV " + m.hdv));
+    b.addEventListener("click", () => { ul.hidden = true; ouvrirProfil(m); });
+    li.append(b);
+    ul.append(li);
+  });
+  ul.hidden = false;
 }
 
 /* ------------------------------- Chargement ------------------------------- */
@@ -981,41 +1446,46 @@ async function charger() {
   const erreur = $("erreur");
   erreur.hidden = true;
   try {
-    let lignesMembres, lignesGuerres;
-    let avertissement = "";
+    let lignesMembres, lignesGuerres = [], lignesClan = [];
+    const avertissements = [];
+
     if (!CONFIG.CSV_MEMBRES) {
       $("demo").hidden = false;
       lignesMembres = DEMO_MEMBRES;
       lignesGuerres = DEMO_GUERRES;
+      lignesClan = DEMO_CLAN;
     } else {
-      // Chaque feuille est chargée séparément : si les guerres échouent, les membres s'affichent quand même
-      const [rMembres, rGuerres] = await Promise.allSettled([
+      // Chaque feuille est chargée séparément : si une feuille annexe échoue, le reste s'affiche quand même
+      const [rMembres, rGuerres, rClan] = await Promise.allSettled([
         chargerCSV(CONFIG.CSV_MEMBRES, "Membres_Public"),
-        CONFIG.CSV_GUERRES ? chargerCSV(CONFIG.CSV_GUERRES, "Archives_Guerres") : Promise.resolve([])
+        CONFIG.CSV_GUERRES ? chargerCSV(CONFIG.CSV_GUERRES, "Archives_Guerres") : Promise.resolve([]),
+        CONFIG.CSV_CLAN ? chargerCSV(CONFIG.CSV_CLAN, "Clan_Public") : Promise.resolve([])
       ]);
       if (rMembres.status === "rejected") throw rMembres.reason;
       lignesMembres = rMembres.value;
-      if (rGuerres.status === "fulfilled") {
-        lignesGuerres = rGuerres.value;
-      } else {
-        lignesGuerres = [];
-        avertissement = "Les guerres n’ont pas pu être chargées (" + rGuerres.reason.message + "). Les membres s’affichent normalement.";
-      }
+      if (rGuerres.status === "fulfilled") lignesGuerres = rGuerres.value;
+      else avertissements.push("les guerres (" + rGuerres.reason.message + ")");
+      if (rClan.status === "fulfilled") lignesClan = rClan.value;
+      else avertissements.push("les infos du clan (" + rClan.reason.message + ")");
     }
 
     etat.membres = lignesMembres.slice(1).filter(r => r[1]).map(normaliserMembre);
     etat.guerres = grouperGuerres(lignesGuerres);
-
+    etat.clan = {};
+    lignesClan.slice(1).forEach(r => { if (r[0]) etat.clan[r[0]] = r[1] === undefined ? "" : r[1]; });
+    calculerStatsGuerre();
     etat.selection = etat.selection.filter(k => etat.membres.some(m => cleMembre(m) === k));
 
     rendreBilan();
+    rendreClan();
     rendrePodiums();
     rendreMembres();
     rendreComparateur();
     rendreGuerres();
+
     $("maj").textContent = "Données chargées à " + new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-    if (avertissement) {
-      erreur.textContent = avertissement;
+    if (avertissements.length) {
+      erreur.textContent = "Certaines données n’ont pas pu être chargées : " + avertissements.join(", ") + ". Le reste s’affiche normalement.";
       erreur.hidden = false;
     }
   } catch (e) {
@@ -1026,15 +1496,43 @@ async function charger() {
 }
 
 /* ------------------------------- Démarrage ------------------------------- */
-document.title = CONFIG.NOM_CLAN + " : tableau de bord";
+document.title = CONFIG.NOM_CLAN + " ⚔️ Stats, classements et guerres du clan";
 $("titre").textContent = CONFIG.NOM_CLAN;
 remplirFiltre();
-$("recherche").addEventListener("input", rendreMembres);
-$("filtre").addEventListener("change", rendreMembres);
-$("btn-cmp").addEventListener("click", () => {
-  const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  $("comparateur").scrollIntoView({ behavior: reduit ? "auto" : "smooth", block: "start" });
+
+$("recherche").addEventListener("input", () => { rendreMembres(); majSuggestions(); });
+$("recherche").addEventListener("keydown", e => {
+  const premier = $("suggestions").querySelector("button");
+  if (e.key === "Enter" && premier) { e.preventDefault(); premier.click(); }
+  else if (e.key === "ArrowDown" && premier) { e.preventDefault(); premier.focus(); }
+  else if (e.key === "Escape") { $("suggestions").hidden = true; }
 });
+$("suggestions").addEventListener("keydown", e => {
+  const boutons = [...$("suggestions").querySelectorAll("button")];
+  const i = boutons.indexOf(document.activeElement);
+  if (e.key === "ArrowDown") { e.preventDefault(); (boutons[i + 1] || boutons[0]).focus(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); (i > 0 ? boutons[i - 1] : $("recherche")).focus(); }
+  else if (e.key === "Escape") { $("suggestions").hidden = true; $("recherche").focus(); }
+});
+document.addEventListener("click", e => { if (!e.target.closest(".recherche-zone")) $("suggestions").hidden = true; });
+$("filtre").addEventListener("change", rendreMembres);
+
+const defilementReduit = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+$("btn-cmp").addEventListener("click", () => {
+  $("comparateur").scrollIntoView({ behavior: defilementReduit() ? "auto" : "smooth", block: "start" });
+});
+const defiler = sens => {
+  const c = $("classements");
+  c.scrollBy({ left: sens * c.clientWidth * 0.8, behavior: defilementReduit() ? "auto" : "smooth" });
+};
+$("cl-prev").addEventListener("click", () => defiler(-1));
+$("cl-next").addEventListener("click", () => defiler(1));
+
+const dialogue = $("profil");
+$("profil-fermer").addEventListener("click", () => dialogue.close());
+dialogue.addEventListener("click", e => { if (e.target === dialogue) dialogue.close(); });
+dialogue.addEventListener("close", () => { document.documentElement.style.overflow = ""; });
+
 charger();
 setInterval(charger, CONFIG.RAFRAICHIR_MINUTES * 60 * 1000);
 </script>
