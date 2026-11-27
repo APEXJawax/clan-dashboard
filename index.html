@@ -661,6 +661,16 @@ dialog.profil::backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(
 .bouton-or:active { transform: translateY(1px); border-bottom-width: 2px; }
 .bouton-or:focus-visible { outline: 3px solid var(--texte); outline-offset: 3px; }
 
+/* Niveaux des héros, équipements, troupes et sorts */
+.niveaux { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px 24px; }
+.niveau-ligne { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; align-items: baseline; }
+.niveau-nom { font-weight: 600; overflow-wrap: anywhere; }
+.niveau-val { color: var(--doux); font-size: 0.9rem; }
+.niveau-ligne.max .niveau-val { color: var(--or-clair); font-weight: 800; }
+.niveau-piste { grid-column: 1 / -1; height: 6px; background: var(--creux); border-radius: 999px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8); }
+.niveau-rempli { height: 100%; background: var(--bleu); border-radius: 999px; }
+.niveau-ligne.max .niveau-rempli { background: linear-gradient(90deg, #b98512, var(--or-clair)); }
+
 @media (max-width: 760px) {
   .clan { grid-template-columns: 1fr; }
 }
@@ -742,6 +752,7 @@ const CONFIG = {
   CSV_MEMBRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=2139490637&single=true&output=csv",   // feuille « Membres_Public »
   CSV_GUERRES: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=675091606&single=true&output=csv",   // feuille « Archives_Guerres »
   CSV_CLAN: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAuue6M90Lq8-CRQru6vx9G5TrRk06esz-PYTP8zH62NktCGYBwuZlTkMe_4qreURPVx4neFAjKokY/pub?gid=218730067&single=true&output=csv",                     // feuille « Clan_Public » (infos et rang du clan)
+  CSV_HEROS: "",                    // feuille « Heros_Public » (héros, équipements, troupes, sorts) : colle ici son lien CSV publié ; "" pour désactiver
   IMAGES_HDV: "hdv/{n}.webp",       // hôtels de ville (WebP) ; "" pour désactiver
   IMAGES_HDO: "hdo/{n}.png",       // hôtels de ville de la base des ouvriers (niveaux 1 à 10) ; "" pour désactiver
   AFFICHER_TENDANCE: false,         // laisser false : la feuille publique ne contient pas la tendance
@@ -792,6 +803,24 @@ const DEMO_CLAN = [
   ["localisation","France"],["frequence_guerre","always"],["trophees_requis",3000],["hdv_requis",12],["badge",""],
   ["description","Clan francophone actif : guerres tous les jours, dons réguliers et bonne ambiance."],
   ["rang_pays",38],["rang_monde",1204],["rang_capitale_pays",12],["rang_capitale_monde",""]
+];
+// Démo : tag, catégorie, nom, niveau, niveau max, village
+const DEMO_HEROS = [
+  ["Tag","Catégorie","Nom","Niveau","Niveau max","Village"],
+  ["#2PP0AAA1","Héros","Roi des Barbares",95,100,"home"],
+  ["#2PP0AAA1","Héros","Reine des Archers",96,100,"home"],
+  ["#2PP0AAA1","Héros","Gardien Gardien",70,75,"home"],
+  ["#2PP0AAA1","Héros","Championne Royale",45,50,"home"],
+  ["#2PP0AAA1","Héros","Maître Bâtisseur",30,30,"builderBase"],
+  ["#2PP0AAA1","Équipements","Poing de Fer",18,18,"home"],
+  ["#2PP0AAA1","Équipements","Cape Invisible",16,18,"home"],
+  ["#2PP0AAA1","Troupes","Dragon",10,10,"home"],
+  ["#2PP0AAA1","Troupes","Sorcier",11,11,"home"],
+  ["#2PP0AAA1","Sorts","Sort de Foudre",11,11,"home"],
+  ["#2PP0AAA1","Sorts","Sort de Rage",6,6,"home"],
+  ["#8QQ1BBB2","Héros","Roi des Barbares",92,100,"home"],
+  ["#8QQ1BBB2","Héros","Reine des Archers",94,100,"home"],
+  ["#8QQ1BBB2","Troupes","Dragon",10,10,"home"]
 ];
 
 /* ------------------------------- Utilitaires ------------------------------- */
@@ -849,7 +878,7 @@ async function chargerCSV(url, nom) {
 }
 
 /* ------------------------------- État ------------------------------- */
-const etat = { membres: [], guerres: [], clan: {}, tri: { cle: "hdv", dir: -1 }, selection: [] };
+const etat = { membres: [], guerres: [], clan: {}, details: {}, tri: { cle: "hdv", dir: -1 }, selection: [] };
 const cleMembre = m => m.tag || m.nom;
 
 function normaliserMembre(r) {
@@ -1320,6 +1349,40 @@ function rendreGuerres() {
   });
 }
 
+/* ------------------------------- Héros, équipements, troupes, sorts ------------------------------- */
+const ORDRE_CATEGORIES = ["Héros", "Équipements", "Troupes", "Sorts"];
+
+function ajouterDetails(corps, m) {
+  const liste = etat.details[m.tag];
+  if (!liste || !liste.length) return;
+  const parCat = {};
+  liste.forEach(d => {
+    const cat = d.ouvriers ? d.cat + " · base des ouvriers" : d.cat;
+    (parCat[cat] = parCat[cat] || []).push(d);
+  });
+  const ordre = [];
+  ORDRE_CATEGORIES.forEach(c => { if (parCat[c]) ordre.push(c); });
+  ORDRE_CATEGORIES.forEach(c => { if (parCat[c + " · base des ouvriers"]) ordre.push(c + " · base des ouvriers"); });
+  Object.keys(parCat).forEach(c => { if (!ordre.includes(c)) ordre.push(c); });
+
+  ordre.forEach(cat => {
+    corps.append(el("h4", "profil-section", cat));
+    const grille = el("div", "niveaux");
+    parCat[cat].forEach(d => {
+      const maxe = d.max > 0 && d.niv >= d.max;
+      const ligne = el("div", "niveau-ligne" + (maxe ? " max" : ""));
+      ligne.append(el("span", "niveau-nom", d.nom), el("span", "niveau-val", d.niv + (d.max > 0 ? " / " + d.max : "")));
+      const piste = el("div", "niveau-piste");
+      const rempli = el("div", "niveau-rempli");
+      rempli.style.width = (d.max > 0 ? Math.min(100, d.niv / d.max * 100) : 100) + "%";
+      piste.append(rempli);
+      ligne.append(piste);
+      grille.append(ligne);
+    });
+    corps.append(grille);
+  });
+}
+
 /* ------------------------------- Fiche joueur ------------------------------- */
 function ouvrirProfil(m) {
   const corps = $("profil-corps");
@@ -1356,6 +1419,9 @@ function ouvrirProfil(m) {
   fait(g1, fmt(m.recus), "Dons reçus");
   if (CONFIG.AFFICHER_TENDANCE) fait(g1, m.tendance, "Tendance");
   corps.append(g1);
+
+  // Héros, équipements, troupes, sorts
+  ajouterDetails(corps, m);
 
   // Guerres
   corps.append(el("h4", "profil-section", "En guerre"));
@@ -1446,7 +1512,7 @@ async function charger() {
   const erreur = $("erreur");
   erreur.hidden = true;
   try {
-    let lignesMembres, lignesGuerres = [], lignesClan = [];
+    let lignesMembres, lignesGuerres = [], lignesClan = [], lignesHeros = [];
     const avertissements = [];
 
     if (!CONFIG.CSV_MEMBRES) {
@@ -1454,12 +1520,14 @@ async function charger() {
       lignesMembres = DEMO_MEMBRES;
       lignesGuerres = DEMO_GUERRES;
       lignesClan = DEMO_CLAN;
+      lignesHeros = DEMO_HEROS;
     } else {
       // Chaque feuille est chargée séparément : si une feuille annexe échoue, le reste s'affiche quand même
-      const [rMembres, rGuerres, rClan] = await Promise.allSettled([
+      const [rMembres, rGuerres, rClan, rHeros] = await Promise.allSettled([
         chargerCSV(CONFIG.CSV_MEMBRES, "Membres_Public"),
         CONFIG.CSV_GUERRES ? chargerCSV(CONFIG.CSV_GUERRES, "Archives_Guerres") : Promise.resolve([]),
-        CONFIG.CSV_CLAN ? chargerCSV(CONFIG.CSV_CLAN, "Clan_Public") : Promise.resolve([])
+        CONFIG.CSV_CLAN ? chargerCSV(CONFIG.CSV_CLAN, "Clan_Public") : Promise.resolve([]),
+        CONFIG.CSV_HEROS ? chargerCSV(CONFIG.CSV_HEROS, "Heros_Public") : Promise.resolve([])
       ]);
       if (rMembres.status === "rejected") throw rMembres.reason;
       lignesMembres = rMembres.value;
@@ -1467,12 +1535,22 @@ async function charger() {
       else avertissements.push("les guerres (" + rGuerres.reason.message + ")");
       if (rClan.status === "fulfilled") lignesClan = rClan.value;
       else avertissements.push("les infos du clan (" + rClan.reason.message + ")");
+      if (rHeros.status === "fulfilled") lignesHeros = rHeros.value;
+      else avertissements.push("les héros et troupes (" + rHeros.reason.message + ")");
     }
 
     etat.membres = lignesMembres.slice(1).filter(r => r[1]).map(normaliserMembre);
     etat.guerres = grouperGuerres(lignesGuerres);
     etat.clan = {};
     lignesClan.slice(1).forEach(r => { if (r[0]) etat.clan[r[0]] = r[1] === undefined ? "" : r[1]; });
+    etat.details = {};
+    lignesHeros.slice(1).forEach(r => {
+      const tag = String(r[0] || "").trim();
+      if (!tag || !r[2]) return;
+      (etat.details[tag] = etat.details[tag] || []).push({
+        cat: r[1] || "Autres", nom: r[2], niv: num(r[3]), max: num(r[4]), ouvriers: r[5] === "builderBase"
+      });
+    });
     calculerStatsGuerre();
     etat.selection = etat.selection.filter(k => etat.membres.some(m => cleMembre(m) === k));
 
